@@ -3,49 +3,396 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Museo Digital y Marketplace 3D - Cerámica de Quinua</title>
-  
-  <!-- Estilos propios -->
+  <title>Museo Digital y Marketplace Quinua 3D</title>
   <link rel="stylesheet" href="css/styles.css">
-
-  <!-- Visor 3D y WebAR de Google -->
+  <!-- Visor 3D de Google -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <header>
-    <h1>Museo Digital de Quinua 3D</h1>
-    <div class="lang-selector">
-      <button onclick="changeLanguage('qu')">Quechua</button>
-      <button onclick="changeLanguage('es')">Español</button>
-      <button onclick="changeLanguage('en')">English</button>
+  <!-- NAVBAR SUPERIOR -->
+  <header class="top-navbar">
+    <div class="brand">
+      <i class="fa-solid fa-monument"></i>
+      <h1 id="app-title">Artesanías de Quinua 3D</h1>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="search-input" placeholder="Buscar artesanía, taller, artesano..." onkeyup="filterContent()">
+    </div>
+
+    <!-- Idiomas y Acceso Artesanos -->
+    <div class="header-actions">
+      <div class="lang-selector">
+        <button onclick="changeLanguage('qu')">Quechua</button>
+        <button onclick="changeLanguage('es')" class="active">Español</button>
+        <button onclick="changeLanguage('en')">English</button>
+      </div>
+      <div id="user-session-actions">
+        <button class="btn-artesano" id="btn-login-header" onclick="switchTab('tab-login')"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión / Registro</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <section class="viewer-container">
-      <model-viewer 
-        id="quinua-viewer"
-        src="assets/models/iglesia_quinua.glb" 
-        ios-src="assets/models/iglesia_quinua.usdz"
-        alt="Modelo 3D de la Cerámica Tradicional de Quinua"
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        camera-controls
-        auto-rotate
-        shadow-intensity="1">
+  <div class="main-layout">
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#" class="nav-item active" id="nav-catalogo" onclick="switchTab('tab-catalogo', this)"><i class="fa-solid fa-store"></i> <span>Catálogo 3D</span></a></li>
+          <li><a href="#" class="nav-item" id="nav-artesanos" onclick="switchTab('tab-artesanos', this)"><i class="fa-solid fa-users"></i> <span>Artesanos</span></a></li>
+          <li><a href="#" class="nav-item" id="nav-populares" onclick="switchTab('tab-populares', this)"><i class="fa-solid fa-fire"></i> <span>Más Vendidas</span></a></li>
+          <li id="nav-li-artesano-panel" style="display:none;"><a href="#" class="nav-item" id="nav-artesano-panel" onclick="switchTab('tab-perfil-artesano-privado', this)"><i class="fa-solid fa-user-gear"></i> <span>Mi Panel Artesano</span></a></li>
+          <li id="nav-li-admin-panel" style="display:none;"><a href="#" class="nav-item" id="nav-admin-panel" onclick="switchTab('tab-admin', this)"><i class="fa-solid fa-shield-halved"></i> <span>Panel Moderación Admin</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="content-area">
+
+      <!-- 1. CATÁLOGO INICIAL DE ARTESANÍAS -->
+      <section id="tab-catalogo" class="tab-content active">
+        <h2>Catálogo de Cerámicas Tradicionales de Quinua</h2>
+        <p class="subtitle">Explora los modelos 3D, revisa las medidas físicas en centímetros y realiza tus pedidos en línea.</p>
         
-        <button slot="ar-button" id="ar-button">
-          👋 Ver en tu espacio (AR)
-        </button>
+        <div class="grid-cards" id="catalogo-grid">
+          <!-- Carga dinámica vía JS / MySQL -->
+        </div>
+      </section>
 
-        <button class="hotspot" slot="hotspot-1" data-position="0m 0.5m 0.2m" data-normal="0m 0m 1m">
-          <div class="annotation" id="info-cruz">Cargando información...</div>
-        </button>
+      <!-- 2. VISTA DE DETALLE / VISOR 3D (SE MUESTRA AL HACER CLIC EN UNA PIEZA) -->
+      <section id="tab-visor-detalle" class="tab-content">
+        <button class="btn-back" onclick="switchTab('tab-catalogo', document.getElementById('nav-catalogo'))"><i class="fa-solid fa-arrow-left"></i> Volver al Catálogo</button>
+        
+        <div class="detail-header-flex">
+          <div>
+            <h2 id="model-title">Iglesia Techada Tradicional</h2>
+            <div class="author-badge-line">
+              <span id="model-author-name"><i class="fa-solid fa-user-pen"></i> Por: Taller Ceramista Quinua</span>
+              <button id="btn-visitar-artesano" class="btn-artesano-link" onclick="abrirPerfilArtesanoActual()"><i class="fa-solid fa-store"></i> Visitar Artesano</button>
+            </div>
+          </div>
+          <button id="btn-comprar-yape" onclick="abrirModalYape()" class="btn-yape-large"><i class="fa-solid fa-qrcode"></i> Comprar con Yape / Tarjeta</button>
+        </div>
 
-      </model-viewer>
-    </section>
-  </main>
+        <!-- Ficha Técnica de Medidas y Precio -->
+        <div class="specs-bar">
+          <div class="spec-item"><i class="fa-solid fa-arrows-up-down"></i> Alto: <strong id="spec-alto">25.0</strong> cm</div>
+          <div class="spec-item"><i class="fa-solid fa-arrows-left-right"></i> Ancho: <strong id="spec-ancho">15.0</strong> cm</div>
+          <div class="spec-item"><i class="fa-solid fa-cube"></i> Fondo: <strong id="spec-fondo">12.0</strong> cm</div>
+          <div class="spec-item price-tag"><i class="fa-solid fa-tag"></i> Precio: S/ <strong id="spec-precio">85.00</strong></div>
+        </div>
+        
+        <div class="viewer-container">
+          <div class="audio-control-bar">
+            <button id="btn-play-audio" onclick="toggleAudio()"><i class="fa-solid fa-volume-high"></i> <span id="lbl-audio">Escuchar Narración</span></button>
+            <span id="audio-status" class="status-badge">Audio en Español</span>
+          </div>
+
+          <model-viewer 
+            id="main-viewer"
+            src="assets/models/iglesia_quinua.glb" 
+            alt="Cerámica 3D Quinua" 
+            auto-rotate 
+            camera-controls 
+            touch-action="pan-y"
+            loading="eager"
+            reveal="auto"
+            ar
+            shadow-intensity="1">
+            
+            <div class="progress-bar-container" slot="progress-bar">
+              <div class="update-bar" id="progress-bar"></div>
+            </div>
+
+            <button class="Hotspot" slot="hotspot-cruz" data-position="0 1.2 0" data-normal="0 1 0">
+              <div class="HotspotAnnotation" id="info-cruz">Cargando información cultural...</div>
+            </button>
+          </model-viewer>
+
+          <div class="model-info-box">
+            <h4><i class="fa-solid fa-circle-info"></i> Reseña Cultural e Historia</h4>
+            <p id="model-description-text">Esta cruz se coloca en los tejados de las casas como símbolo de protección en la tradición artesanal de Quinua.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. PERFIL PÚBLICO DEL ARTESANO (INFORMACIÓN, MAPA Y OBRAS) -->
+      <section id="tab-perfil-artesano-publico" class="tab-content">
+        <button class="btn-back" onclick="switchTab('tab-catalogo', document.getElementById('nav-catalogo'))"><i class="fa-solid fa-arrow-left"></i> Volver al Catálogo</button>
+        
+        <div class="artisan-public-header">
+          <div class="artisan-avatar-circle"><i class="fa-solid fa-user-gear"></i></div>
+          <div class="artisan-info-meta">
+            <h2 id="pub-artesano-nombre">Taller Maestro Quinua</h2>
+            <p class="pub-especialidad" id="pub-artesano-especialidad"><i class="fa-solid fa-certificate"></i> Especialidad: Cerámica Tradicional</p>
+            <p class="pub-direccion" id="pub-artesano-direccion"><i class="fa-solid fa-location-dot"></i> Dirección: Jr. Sucre N° 102, Quinua, Ayacucho</p>
+            <p class="pub-bio" id="pub-artesano-bio">Maestro ceramista de Quinua dedicado a preservar la alfarería tradicional andina.</p>
+            
+            <button id="btn-google-maps" class="btn-maps" onclick="abrirUbicacionMapsActual()"><i class="fa-solid fa-map-location-dot"></i> Mostrar Ubicación en Google Maps</button>
+          </div>
+        </div>
+
+        <h3 class="section-subtitle"><i class="fa-solid fa-cubes"></i> Obras de este Artesano</h3>
+        <div class="grid-cards" id="pub-artesano-obras-grid">
+          <!-- Carga obras del artesano -->
+        </div>
+      </section>
+
+      <!-- 4. PERFIL PRIVADO / PANEL DEL ARTESANO -->
+      <section id="tab-perfil-artesano-privado" class="tab-content">
+        <div class="panel-header">
+          <div>
+            <h2><i class="fa-solid fa-user-gear"></i> Panel del Artesano</h2>
+            <p class="subtitle" id="priv-welcome-text">Bienvenido/a a tu panel de gestión.</p>
+          </div>
+          <button class="btn-primary" onclick="abrirModalPublicar()"><i class="fa-solid fa-plus-circle"></i> Publicar Nueva Artesanía</button>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <i class="fa-solid fa-box-open"></i>
+            <h3 id="stat-total-obras">0</h3>
+            <p>Mis Obras Registradas</p>
+          </div>
+          <div class="stat-card">
+            <i class="fa-solid fa-check-circle" style="color: #27ae60;"></i>
+            <h3 id="stat-aprobadas">0</h3>
+            <p>Publicadas en Catálogo</p>
+          </div>
+          <div class="stat-card">
+            <i class="fa-solid fa-hourglass-half" style="color: #f39c12;"></i>
+            <h3 id="stat-pendientes">0</h3>
+            <p>En Revisión por Admin</p>
+          </div>
+        </div>
+
+        <!-- Editar Datos de Ubicación y Perfil -->
+        <div class="profile-edit-box">
+          <h3><i class="fa-solid fa-map-pin"></i> Mi Ubicación y Dirección en Quinua</h3>
+          <form id="form-perfil-artesano" class="auth-form-grid">
+            <div class="form-group">
+              <label>Dirección en Quinua</label>
+              <input type="text" id="edit-direccion" placeholder="Ej: Jr. Sucre N° 102, Quinua">
+            </div>
+            <div class="form-group">
+              <label>Enlace / Coordenadas de Google Maps</label>
+              <input type="text" id="edit-maps" placeholder="https://www.google.com/maps/search/?api=1&query=Quinua+Ayacucho">
+            </div>
+            <div class="form-group full-width">
+              <label>Biografía / Historia del Taller</label>
+              <textarea id="edit-bio" rows="3" placeholder="Reseña de tu trayectoria artesanal..."></textarea>
+            </div>
+            <button type="submit" class="btn-secondary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios de Perfil</button>
+          </form>
+        </div>
+
+        <!-- Mis Obras -->
+        <h3><i class="fa-solid fa-list-check"></i> Estado de Mis Publicaciones</h3>
+        <div class="grid-cards" id="mis-obras-grid">
+          <!-- Carga mis obras -->
+        </div>
+      </section>
+
+      <!-- 5. PANEL DE MODERACIÓN ADMINISTRADOR -->
+      <section id="tab-admin" class="tab-content">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-shield-halved"></i> Panel de Moderación de Administrador</h2>
+          <p class="subtitle">Revisa las nuevas publicaciones enviadas por los artesanos antes de aprobar su salida al catálogo público.</p>
+        </div>
+
+        <div id="admin-pendientes-list">
+          <!-- Carga publicaciones pendientes -->
+        </div>
+      </section>
+
+      <!-- 6. DIRECTORIO DE ARTESANOS PÚBLICO -->
+      <section id="tab-artesanos" class="tab-content">
+        <h2>Maestros Ceramistas de Quinua</h2>
+        <div class="grid-cards" id="lista-artesanos-grid">
+          <!-- Carga lista de artesanos -->
+        </div>
+      </section>
+
+      <!-- 7. MÁS VENDIDAS -->
+      <section id="tab-populares" class="tab-content">
+        <h2>Cerámicas Más Populares</h2>
+        <div class="grid-cards" id="populares-grid">
+          <!-- Carga más vendidas -->
+        </div>
+      </section>
+
+      <!-- 8. PORTAL / LOGIN Y REGISTRO DE USUARIOS Y ARTESANOS -->
+      <section id="tab-login" class="tab-content">
+        <div class="auth-container">
+          <div class="auth-tabs">
+            <button id="btn-tab-login" class="auth-tab-btn active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+            <button id="btn-tab-register" class="auth-tab-btn" onclick="switchAuthTab('register')">Registrarse</button>
+          </div>
+
+          <!-- FORMULARIO DE INICIO DE SESIÓN -->
+          <div id="auth-login-box">
+            <h2>Acceso a la Plataforma</h2>
+            <p class="subtitle">Ingresa con tu cuenta de Artesano, Turista o Administrador.</p>
+            
+            <form id="form-login" class="auth-form">
+              <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> Correo Electrónico</label>
+                <input type="email" id="login-email" placeholder="usuario@quinua.pe" required>
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Contraseña</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+              </div>
+              <button type="submit" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+            </form>
+
+            <div class="auth-footer">
+              <p>¿Aún no tienes cuenta? <a href="#" onclick="switchAuthTab('register'); return false;">Regístrate aquí</a></p>
+            </div>
+          </div>
+
+          <!-- FORMULARIO DE REGISTRO -->
+          <div id="auth-register-box" style="display: none;">
+            <h2>Registro de Usuario</h2>
+            <p class="subtitle">Crea tu cuenta para comprar artesanías o publicar obras en 3D.</p>
+
+            <form id="form-register" class="auth-form">
+              <div class="form-group">
+                <label><i class="fa-solid fa-user-gear"></i> Tipo de Cuenta</label>
+                <select id="reg-rol" onchange="toggleRegFields()">
+                  <option value="artesano">Artesano Ceramista (Publicar Obras 3D)</option>
+                  <option value="turista">Turista / Comprador (Adquirir Artesanías)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-user"></i> Nombre Completo / Taller</label>
+                <input type="text" id="reg-nombre" placeholder="Ej: Taller Mamerto Sánchez" required>
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> Correo Electrónico</label>
+                <input type="email" id="reg-email" placeholder="usuario@quinua.pe" required>
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Contraseña</label>
+                <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+              </div>
+              <div class="form-group" id="group-reg-especialidad">
+                <label><i class="fa-solid fa-certificate"></i> Especialidad Artesanal</label>
+                <input type="text" id="reg-especialidad" placeholder="Ej: Iglesias tradicionales, Toritos de Quinua">
+              </div>
+              <div class="form-group" id="group-reg-direccion">
+                <label><i class="fa-solid fa-location-dot"></i> Dirección en Quinua</label>
+                <input type="text" id="reg-direccion" placeholder="Ej: Jr. Sucre N° 102, Pueblo de Quinua">
+              </div>
+              <button type="submit" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Registrar mi Cuenta</button>
+            </form>
+
+            <div class="auth-footer">
+              <p>¿Ya tienes una cuenta? <a href="#" onclick="switchAuthTab('login'); return false;">Inicia sesión aquí</a></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: PUBLICAR NUEVA ARTESANÍA -->
+  <div id="modal-publicar" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-plus-circle"></i> Publicar Nueva Artesanía en 3D</h3>
+        <button class="modal-close" onclick="cerrarModalPublicar()">&times;</button>
+      </div>
+      <form id="form-publicar-obra" class="modal-body">
+        <div class="form-group">
+          <label>Título de la Artesanía</label>
+          <input type="text" id="pub-titulo" placeholder="Ej: Torito de Quinua Tradicional" required>
+        </div>
+        <div class="form-group">
+          <label>Descripción en Español</label>
+          <textarea id="pub-desc-es" rows="2" placeholder="Reseña y simbolismo cultural..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Descripción en Quechua (Opcional)</label>
+          <textarea id="pub-desc-qu" rows="2" placeholder="Runasimi qillqana..."></textarea>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Alto (cm)</label>
+            <input type="number" step="0.1" id="pub-alto" placeholder="25.0" required>
+          </div>
+          <div class="form-group">
+            <label>Ancho (cm)</label>
+            <input type="number" step="0.1" id="pub-ancho" placeholder="15.0" required>
+          </div>
+          <div class="form-group">
+            <label>Fondo (cm)</label>
+            <input type="number" step="0.1" id="pub-fondo" placeholder="12.0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Precio en Soles (S/)</label>
+          <input type="number" step="0.50" id="pub-precio" placeholder="85.00" required>
+        </div>
+        <div class="form-group">
+          <label>Foto de Perfil / Previsualización (Imagen)</label>
+          <input type="file" id="pub-imagen-file" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label>Modelo 3D (Archivo .GLB)</label>
+          <input type="file" id="pub-glb-file" accept=".glb">
+          <small>O escribe el nombre del modelo existente:</small>
+          <input type="text" id="pub-glb-nombre" placeholder="iglesia_quinua.glb">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="cerrarModalPublicar()">Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Enviar a Revisión</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PASARELA DE PAGO YAPE PARA TURISTAS -->
+  <div id="modal-checkout" class="modal-overlay" style="display: none;">
+    <div class="modal-content yape-modal">
+      <div class="modal-header yape-header">
+        <h3><i class="fa-solid fa-qrcode"></i> Pagar Artesanía con Yape</h3>
+        <button class="modal-close" onclick="cerrarModalYape()">&times;</button>
+      </div>
+      <div class="modal-body yape-body">
+        <p class="yape-subtitle">Escanea el código QR o yapea al número de la Asociación de Artesanos de Quinua:</p>
+
+        <div class="yape-qr-box">
+          <div class="qr-placeholder"><i class="fa-solid fa-qrcode"></i> <span>QR YAPE QUINUA</span></div>
+          <div class="yape-number">
+            <p>Número Yape: <strong>987 654 321</strong></p>
+            <p>Titular: <strong>Asociación Ceramistas Quinua</strong></p>
+          </div>
+        </div>
+
+        <div class="checkout-summary">
+          <p>Producto: <strong id="checkout-title">Iglesia Techada</strong></p>
+          <p>Monto a pagar: <strong id="checkout-monto">S/ 85.00</strong></p>
+        </div>
+
+        <form id="form-confirmar-yape">
+          <div class="form-group">
+            <label>Número de Operación / Referencia Yape</label>
+            <input type="text" id="yape-ref" placeholder="Ej: 12345678" required>
+          </div>
+          <button type="submit" class="btn-yape-confirm"><i class="fa-solid fa-circle-check"></i> Confirmar Pago y Registrar Pedido</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <script src="js/main.js"></script>
 </body>

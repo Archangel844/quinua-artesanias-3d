@@ -86,38 +86,73 @@ async function cargarArtesanias() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     artesaniasData = await response.json();
 
-    const grid = document.getElementById('catalogo-grid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-
-    if (Array.isArray(artesaniasData) && artesaniasData.length > 0) {
-      artesaniasData.forEach(pieza => {
-        const card = document.createElement('div');
-        card.className = 'card card-product';
-        card.onclick = () => openModelViewerDynamic(pieza);
-
-        const imgThumb = pieza.imagen_url 
-          ? (pieza.imagen_url.startsWith('assets/') ? pieza.imagen_url : `assets/images/${pieza.imagen_url}`)
-          : null;
-
-        card.innerHTML = `
-          <div class="card-badge">3D / AR</div>
-          ${imgThumb ? `<img src="${imgThumb}" alt="${pieza.titulo}" class="card-img-thumb" onerror="this.style.display='none'">` : '<div class="card-icon"><i class="fa-solid fa-cube"></i></div>'}
-          <h3>${pieza.titulo}</h3>
-          <p class="author"><i class="fa-solid fa-user-pen"></i> Por: ${pieza.artesano_nombre || 'Artesano de Quinua'}</p>
-          <p class="desc">${pieza.descripcion_es || 'Cerámica tradicional en 3D'}</p>
-          <p class="card-price">S/ ${(parseFloat(pieza.precio) || 85.00).toFixed(2)}</p>
-          <button class="btn-view-3d"><i class="fa-solid fa-cube"></i> Ver en 3D y Comprar</button>
-        `;
-        grid.appendChild(card);
-      });
-    } else {
-      grid.innerHTML = '<p class="subtitle">No hay artesanías disponibles en el catálogo.</p>';
+    if (!Array.isArray(artesaniasData) || artesaniasData.length === 0) {
+      throw new Error('Sin artesanías en servidor');
     }
+
+    renderArtesaniasGrid(artesaniasData);
   } catch (error) {
-    console.log('Servidor backend offline o sin conexión MySQL:', error.message);
+    console.log('Modo Cliente/Estático: Usando artesanías precargadas localmente.');
+    const defaultPieces = [
+      {
+        id: 1,
+        titulo: "Iglesia Tradicional de Quinua",
+        descripcion_es: "Réplica artesanal en cerámica del templo histórico de la Villa de Quinua, Ayacucho.",
+        descripcion_qu: "Quinua llaqtamanta unay iglesiap llimp'isqa saqichanmanta wakichisqa artisanía.",
+        alto_cm: 25.0, ancho_cm: 15.0, fondo_cm: 12.0,
+        precio: 85.00,
+        artesano_nombre: "Maestro Ceramista Mamani",
+        artesano_id: 1,
+        modelo_glb: "assets/models/iglesia_quinua.glb",
+        imagen_url: null,
+        audio_es: "assets/audio/desc_es.m4a",
+        audio_qu: "assets/audio/desc_qu.m4a"
+      },
+      {
+        id: 2,
+        titulo: "Torito de Quinua Protector",
+        descripcion_es: "Figura mística colocada en los techos de las casas quinuañas para la buena suerte y protección.",
+        descripcion_qu: "Wasi qatapi churasqa torito, allin kawsaypaq wan amachakuypaq.",
+        alto_cm: 18.0, ancho_cm: 10.0, fondo_cm: 8.0,
+        precio: 65.00,
+        artesano_nombre: "Artesana Faustina Flores",
+        artesano_id: 2,
+        modelo_glb: "assets/models/iglesia.glb",
+        imagen_url: null,
+        audio_es: "assets/audio/desc_es.m4a",
+        audio_qu: "assets/audio/desc_qu.m4a"
+      }
+    ];
+    artesaniasData = defaultPieces;
+    renderArtesaniasGrid(artesaniasData);
   }
+}
+
+function renderArtesaniasGrid(piezas) {
+  const grid = document.getElementById('catalogo-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  piezas.forEach(pieza => {
+    const card = document.createElement('div');
+    card.className = 'card card-product';
+    card.onclick = () => openModelViewerDynamic(pieza);
+
+    const imgThumb = pieza.imagen_url 
+      ? (pieza.imagen_url.startsWith('assets/') ? pieza.imagen_url : `assets/images/${pieza.imagen_url}`)
+      : null;
+
+    card.innerHTML = `
+      <div class="card-badge">3D / AR</div>
+      ${imgThumb ? `<img src="${imgThumb}" alt="${pieza.titulo}" class="card-img-thumb" onerror="this.style.display='none'">` : '<div class="card-icon"><i class="fa-solid fa-cube"></i></div>'}
+      <h3>${pieza.titulo}</h3>
+      <p class="author"><i class="fa-solid fa-user-pen"></i> Por: ${pieza.artesano_nombre || 'Artesano de Quinua'}</p>
+      <p class="desc">${pieza.descripcion_es || 'Cerámica tradicional en 3D'}</p>
+      <p class="card-price">S/ ${(parseFloat(pieza.precio) || 85.00).toFixed(2)}</p>
+      <button class="btn-view-3d"><i class="fa-solid fa-cube"></i> Ver en 3D y Comprar</button>
+    `;
+    grid.appendChild(card);
+  });
 }
 
 // 3. Abrir la pieza seleccionada en el Visor 3D (#tab-visor-detalle)
